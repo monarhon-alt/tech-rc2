@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang=\"uk\">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
@@ -23,7 +23,7 @@
     input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #1976d2; background-color: #fff; box-shadow: 0 0 0 2px rgba(25,118,210,0.1); }
     .radio-group { display: flex; flex-direction: column; gap: 8px; }
     .radio-row { display: flex; gap: 8px; }
-    .radio-option { flex: 1; transition: opacity 0.2s ease; }
+    .radio-option { flex: 1; transition: all 0.2s ease; }
     .radio-option input[type="radio"] { display: none; }
     .radio-label { display: block; text-align: center; padding: 12px 8px; border: 1px solid #90caf9; border-radius: 6px; font-size: 12px; font-weight: 700; color: #455a64; background-color: #f8fbff; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
     .radio-option input[type="radio"]:checked + .radio-label { background-color: #1976d2; color: white; border-color: #1976d2; }
@@ -67,10 +67,10 @@
         <label>3. ДІЯ З ТЕХНІКОЮ</label>
         <div class="radio-group">
           <div class="radio-row">
-            <label class="radio-option"><input type="radio" name="action" value="ВЗЯВ В РОБОТУ" id="actionTake" required><span class="radio-label">ВЗЯВ В РОБОТУ</span></label>
-            <label class="radio-option return"><input type="radio" name="action" value="ЗАВЕРШИВ РОБОТУ" id="actionReturn"><span class="radio-label">ЗАВЕРШИВ РОБОТУ</span></label>
+            <label class="radio-option" id="containerTake"><input type="radio" name="action" value="ВЗЯВ В РОБОТУ" id="actionTake" required><span class="radio-label">ВЗЯВ В РОБОТУ</span></label>
+            <label class="radio-option return" id="containerReturn"><input type="radio" name="action" value="ЗАВЕРШИВ РОБОТУ" id="actionReturn"><span class="radio-label">ЗАВЕРШИВ РОБОТУ</span></label>
           </div>
-          <label class="radio-option force"><input type="radio" name="action" value="ПРИМУСОВО ЗАБРАВ У ІНШОГО ПРАЦІВНИКА" id="actionForce"><span class="radio-label">ПРИМУСОВО ЗАБРАВ У ІНШОГО ПРАЦІВНИКА</span></label>
+          <label class="radio-option force" id="containerForce"><input type="radio" name="action" value="ПРИМУСОВО ЗАБРАВ У ІНШОГО ПРАЦІВНИКА" id="actionForce"><span class="radio-label">ПРИМУСОВО ЗАБРАВ У ІНШОГО ПРАЦІВНИКА</span></label>
         </div>
       </div>
 
@@ -114,10 +114,13 @@
     const actionReturn = document.getElementById('actionReturn');
     const actionForce = document.getElementById('actionForce');
 
+    const containerTake = document.getElementById('containerTake');
+    const containerReturn = document.getElementById('containerReturn');
+    const containerForce = document.getElementById('containerForce');
+
     let rawBadgeValue = "";
     let rawTechValue = "";
 
-    // Вспомогательная функция для визуального форматирования текста техники на лету
     function getCleanTechName(techCode) {
       if (techCode.toUpperCase().startsWith("FOZZY ")) {
         let name = techCode.substring(6);
@@ -141,43 +144,65 @@
       }, 300);
     };
 
-    // МГНОВЕННАЯ замена при сканировании бэйджа
+    // Асинхронный предзапрос имени сотрудника сразу после ввода бэйджа
+    function prefetchWorkerName(badge) {
+      if (!badge) return;
+      fetch(GOOGLE_SCRIPT_URL + "?action=getTechStatus&badge=" + badge + "&tech=")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.currentWorker) {
+            badgeInput.value = data.currentWorker;
+          } else if (badgeInput.value === "Завантаження...") {
+            badgeInput.value = rawBadgeValue;
+          }
+        })
+        .catch(() => {
+          if (badgeInput.value === "Завантаження...") badgeInput.value = rawBadgeValue;
+        });
+    }
+
     badgeInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
         let val = badgeInput.value.trim();
         if (val !== "") {
           rawBadgeValue = val;
-          // Временно пишем "Завантаження...", пока сервер не вернет настоящее ФИО
-          badgeInput.value = "Завантаження працівника...";
+          badgeInput.value = "Завантаження...";
+          prefetchWorkerName(val); // Запускаем фоновый поиск ФИО
           techInput.focus();
         }
       }
     });
 
-    // МГНОВЕННАЯ замена при сканировании техники
     techInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
         let val = techInput.value.trim();
         if (val !== "") {
           rawTechValue = val;
-          // Сразу делаем имя красивым на экране, не дожидаясь ответа сервера
-          techInput.value = getCleanTechName(val);
-          triggerStatusCheck(); // Запускаем проверку
+          techInput.value = getCleanTechName(val); // Мгновенно убираем FOZZY
+          triggerStatusCheck();
         }
       }
     });
 
-    badgeInput.addEventListener("input", function() {
-      if (!badgeInput.value.includes("Завантаження") && rawBadgeValue === "") {
-        rawBadgeValue = badgeInput.value.trim();
+    badgeInput.addEventListener("blur", function() {
+      let val = badgeInput.value.trim();
+      if (val !== "" && !val.includes("Завантаження") && /^\d+$/.test(val)) {
+        rawBadgeValue = val;
+        badgeInput.value = "Завантаження...";
+        prefetchWorkerName(val);
       }
     });
 
-    techInput.addEventListener("input", function() {
-      if (rawTechValue === "") {
-        rawTechValue = techInput.value.trim();
+    techInput.addEventListener("blur", function() {
+      let val = techInput.value.trim();
+      if (val !== "" && (val.toUpperCase().includes("FOZZY") || /^\d+$/.test(val))) {
+        rawTechValue = val;
+        techInput.value = getCleanTechName(val);
+        triggerStatusCheck();
+      } else if (rawTechValue !== "" && val !== "") {
+        triggerStatusCheck();
       }
     });
 
@@ -185,6 +210,35 @@
       statusMsg.innerText = text;
       statusMsg.className = (type === 'error' ? 'msg-error' : type === 'success' ? 'msg-success' : 'msg-loading');
       statusMsg.style.display = "block";
+    }
+
+    // Управление доступностью кнопок действий в зависимости от ситуации
+    function setRadioState(mode) {
+      // Сброс в исходное состояние
+      actionTake.disabled = false; actionReturn.disabled = false; actionForce.disabled = false;
+      containerTake.style.opacity = "1"; containerTake.style.pointerEvents = "auto";
+      containerReturn.style.opacity = "1"; containerReturn.style.pointerEvents = "auto";
+      containerForce.style.opacity = "1"; containerForce.style.pointerEvents = "auto";
+
+      if (mode === 'FREE') {
+        actionTake.checked = true;
+        
+        actionReturn.disabled = true; containerReturn.style.opacity = "0.25"; containerReturn.style.pointerEvents = "none";
+        actionForce.disabled = true; containerForce.style.opacity = "0.25"; containerForce.style.pointerEvents = "none";
+      } 
+      else if (mode === 'OWNED') {
+        actionReturn.checked = true;
+        
+        actionTake.disabled = true; containerTake.style.opacity = "0.25"; containerTake.style.pointerEvents = "none";
+        actionForce.disabled = true; containerForce.style.opacity = "0.25"; containerForce.style.pointerEvents = "none";
+      } 
+      else if (mode === 'OTHER') {
+        actionForce.checked = true; // ПРИНУДИТЕЛЬНО ПЕРЕКЛЮЧАЕМ НА ИЗЪЯТИЕ
+        
+        // Намертво блокируем обычное взятие и чужую сдачу техники
+        actionTake.disabled = true; containerTake.style.opacity = "0.25"; containerTake.style.pointerEvents = "none";
+        actionReturn.disabled = true; containerReturn.style.opacity = "0.25"; containerReturn.style.pointerEvents = "none";
+      }
     }
 
     function submitForm() {
@@ -224,21 +278,18 @@
       badgeInput.value = ""; techInput.value = ""; commentInput.value = "";
       rawBadgeValue = ""; rawTechValue = "";
       submitBtn.disabled = true; statusMsg.style.display = "none";
-      if (actionTake) actionTake.checked = false;
-      if (actionReturn) actionReturn.checked = false;
       
-      if (actionForce) {
-        actionForce.checked = false;
-        actionForce.disabled = false;
-        actionForce.closest('.radio-option').style.opacity = "1";
-        actionForce.closest('.radio-option').style.pointerEvents = "auto";
-      }
+      actionTake.checked = false; actionReturn.checked = false; actionForce.checked = false;
+      actionTake.disabled = false; actionReturn.disabled = false; actionForce.disabled = false;
+      
+      containerTake.style.opacity = "1"; containerTake.style.pointerEvents = "auto";
+      containerReturn.style.opacity = "1"; containerReturn.style.pointerEvents = "auto";
+      containerForce.style.opacity = "1"; containerForce.style.pointerEvents = "auto";
+      
       badgeInput.focus();
     }
 
     let isChecking = false;
-    
-    // Вынесли логику проверки в отдельную функцию, которая вызывается мгновенно
     function triggerStatusCheck() {
       const badge = rawBadgeValue;
       const tech = rawTechValue;
@@ -253,61 +304,42 @@
           isChecking = false;
           if (!data.success) {
             showStatus(data.message, "error");
-            if (badgeInput.value === "Завантаження працівника...") badgeInput.value = rawBadgeValue;
+            if (badgeInput.value === "Завантаження...") badgeInput.value = rawBadgeValue;
             return;
           }
           statusMsg.style.display = "none";
 
-          // Подменяем временный текст на настоящее ФИО от сервера
           if (data.currentWorker) {
             badgeInput.value = data.currentWorker;
-          } else if (badgeInput.value === "Завантаження працівника...") {
-            badgeInput.value = rawBadgeValue;
           }
 
           if (data.techFound) {
             if (data.techHolder === "") {
-              actionTake.checked = true;
-              actionForce.checked = false;
-              actionForce.disabled = true;
-              actionForce.closest('.radio-option').style.opacity = "0.3";
-              actionForce.closest('.radio-option').style.pointerEvents = "none";
+              setRadioState('FREE');
             } 
             else if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
-              actionTake.checked = true;
-              actionForce.disabled = false;
-              actionForce.closest('.radio-option').style.opacity = "1";
-              actionForce.closest('.radio-option').style.pointerEvents = "auto";
+              setRadioState('OTHER');
             } 
             else if (data.techHolder.toLowerCase() === data.currentWorker.toLowerCase()) {
-              actionReturn.checked = true;
-              actionForce.checked = false;
-              actionForce.disabled = true;
-              actionForce.closest('.radio-option').style.opacity = "0.3";
-              actionForce.closest('.radio-option').style.pointerEvents = "none";
+              setRadioState('OWNED');
             }
           }
           
           if (data.alreadyHasTech) {
-            showStatus("⚠️ Увага: У вас вже є техніка: " + data.alreadyHasTechName + ". Спочатку здайте її!", "error");
-            actionTake.checked = false;
-            submitBtn.disabled = true;
+            // Блокируем только если сотрудник пытается взять НОВУЮ технику, имея старую
+            if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
+              showStatus("⚠️ Увага: У вас вже є техніка: " + data.alreadyHasTechName + ". Спочатку здайте її!", "error");
+              actionTake.checked = false;
+              actionForce.checked = false;
+              submitBtn.disabled = true;
+            }
           }
         })
         .catch(err => {
           isChecking = false;
           statusMsg.style.display = "none";
-          if (badgeInput.value === "Завантаження працівника...") badgeInput.value = rawBadgeValue;
         });
     }
-
-    // Сохраняем на случай ручной потери фокуса
-    techInput.addEventListener("blur", triggerStatusCheck);
-    badgeInput.addEventListener("blur", function() {
-      if (badgeInput.value.trim() !== "" && !badgeInput.value.includes("Завантаження") && rawBadgeValue === "") {
-        rawBadgeValue = badgeInput.value.trim();
-      }
-    });
 
     function openStatusModal() {
       document.getElementById('overlay').style.display = 'block';
