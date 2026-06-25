@@ -23,7 +23,7 @@
     input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #1976d2; background-color: #fff; box-shadow: 0 0 0 2px rgba(25,118,210,0.1); }
     .radio-group { display: flex; flex-direction: column; gap: 8px; }
     .radio-row { display: flex; gap: 8px; }
-    .radio-option { flex: 1; }
+    .radio-option { flex: 1; transition: opacity 0.2s ease; }
     .radio-option input[type="radio"] { display: none; }
     .radio-label { display: block; text-align: center; padding: 12px 8px; border: 1px solid #90caf9; border-radius: 6px; font-size: 12px; font-weight: 700; color: #455a64; background-color: #f8fbff; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
     .radio-option input[type="radio"]:checked + .radio-label { background-color: #1976d2; color: white; border-color: #1976d2; }
@@ -114,6 +114,10 @@
     const actionReturn = document.getElementById('actionReturn');
     const actionForce = document.getElementById('actionForce');
 
+    // Переменные для хранения скрытых оригинальных штрих-кодов
+    let rawBadgeValue = "";
+    let rawTechValue = "";
+
     function updateFormHeight() {
       form.style.height = window.innerHeight + 'px';
       window.scrollTo(0, 0);
@@ -122,21 +126,42 @@
     window.onload = function() {
       badgeInput.focus();
       updateFormHeight();
-      setInterval(() => { submitBtn.disabled = !form.checkValidity(); }, 300);
+      setInterval(() => { 
+        // Валидация формы опирается на наличие сохраненных оригинальных кодов
+        submitBtn.disabled = (!rawBadgeValue || !rawTechValue || !document.querySelector('input[name="action"]:checked')); 
+      }, 300);
     };
 
-    // ДОБАВЛЕНО: Обработка нажатия Enter сканером для автоматического перехода по полям
     badgeInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        techInput.focus();
+        if (badgeInput.value.trim() !== "") {
+          rawBadgeValue = badgeInput.value.trim(); // Сохраняем оригинал кода
+          techInput.focus();
+        }
       }
     });
 
     techInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        techInput.blur(); // Вызовет событие проверки техники
+        if (techInput.value.trim() !== "") {
+          rawTechValue = techInput.value.trim(); // Сохраняем оригинал кода
+          techInput.blur(); 
+        }
+      }
+    });
+
+    // Обработка ручного ввода или вставки (на случай работы без Enter)
+    badgeInput.addEventListener("input", function() {
+      if (!badgeInput.value.includes(" (")) {
+        rawBadgeValue = badgeInput.value.trim();
+      }
+    });
+
+    techInput.addEventListener("input", function() {
+      if (!techInput.value.includes(" (")) {
+        rawTechValue = techInput.value.trim();
       }
     });
 
@@ -151,8 +176,8 @@
       showStatus("Збереження...", "loading");
 
       let payload = {
-        badge: badgeInput.value.trim(),
-        tech: techInput.value.trim(),
+        badge: rawBadgeValue,
+        tech: rawTechValue,
         action: document.querySelector('input[name="action"]:checked').value,
         comment: commentInput.value.trim()
       };
@@ -181,17 +206,24 @@
 
     function resetForm() {
       badgeInput.value = ""; techInput.value = ""; commentInput.value = "";
+      rawBadgeValue = ""; rawTechValue = "";
       submitBtn.disabled = true; statusMsg.style.display = "none";
       if (actionTake) actionTake.checked = false;
       if (actionReturn) actionReturn.checked = false;
-      if (actionForce) actionForce.checked = false;
+      
+      if (actionForce) {
+        actionForce.checked = false;
+        actionForce.disabled = false;
+        actionForce.closest('.radio-option').style.opacity = "1";
+        actionForce.closest('.radio-option').style.pointerEvents = "auto";
+      }
       badgeInput.focus();
     }
 
     let isChecking = false;
     techInput.addEventListener("blur", function() {
-      const badge = badgeInput.value.trim();
-      const tech = techInput.value.trim();
+      const badge = rawBadgeValue;
+      const tech = rawTechValue;
       
       if (!badge || !tech || isChecking) return;
       isChecking = true;
@@ -207,13 +239,51 @@
           }
           statusMsg.style.display = "none";
 
+          // Подмена штрих-кода сотрудника на его ФИО (если оно вернулось)
+          if (data.currentWorker) {
+            badgeInput.value = data.currentWorker;
+          }
+
+          // Красивое преобразование названия техники (Убирает "FOZZY " и делает понятный вид)
+          if (tech.toUpperCase().startsWith("FOZZY ")) {
+            let cleanName = tech.substring(6); // Срезаем слово "FOZZY "
+            cleanName = cleanName.replace("Elektronavantazhuvach", "Електронавантажувач");
+            cleanName = cleanName.replace("RichTrak", "Річтрак");
+            techInput.value = cleanName;
+          }
+
           if (data.techFound) {
-            if (data.techHolder === "" || data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
+            // СЛУЧАЙ 1: Техника полностью свободна
+            if (data.techHolder === "") {
               actionTake.checked = true;
-            } else if (data.techHolder.toLowerCase() === data.currentWorker.toLowerCase()) {
+              
+              // Наглухо блокируем кнопку принудительного изъятия
+              actionForce.checked = false;
+              actionForce.disabled = true;
+              actionForce.closest('.radio-option').style.opacity = "0.3";
+              actionForce.closest('.radio-option').style.pointerEvents = "none";
+            } 
+            // СЛУЧАЙ 2: Техника занята ДРУГИМ сотрудником
+            else if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
+              actionTake.checked = true;
+              
+              // Разрешаем принудительное изъятие
+              actionForce.disabled = false;
+              actionForce.closest('.radio-option').style.opacity = "1";
+              actionForce.closest('.radio-option').style.pointerEvents = "auto";
+            } 
+            // СЛУЧАЙ 3: Техника уже на текущем сотруднике
+            else if (data.techHolder.toLowerCase() === data.currentWorker.toLowerCase()) {
               actionReturn.checked = true;
+              
+              // У себя забирать нельзя — блокируем кнопку
+              actionForce.checked = false;
+              actionForce.disabled = true;
+              actionForce.closest('.radio-option').style.opacity = "0.3";
+              actionForce.closest('.radio-option').style.pointerEvents = "none";
             }
           }
+          
           if (data.alreadyHasTech) {
             showStatus("⚠️ Увага: У вас вже є техніка: " + data.alreadyHasTechName + ". Спочатку здайте її!", "error");
             actionTake.checked = false;
@@ -239,7 +309,11 @@
           if (data.success && data.data.length > 0) {
             data.data.forEach(item => {
               let color = item.status === "ВІЛЬНА" ? "green" : "red";
-              tbody.innerHTML += `<tr><td>${item.name}</td><td style="color:${color};font-weight:600;">${item.status}</td></tr>`;
+              let displayName = item.name;
+              if (displayName.toUpperCase().startsWith("FOZZY ")) {
+                displayName = displayName.substring(6).replace("Elektronavantazhuvach", "Електронавантажувач").replace("RichTrak", "Річтрак");
+              }
+              tbody.innerHTML += `<tr><td>${displayName}</td><td style="color:${color};font-weight:600;">${item.status}</td></tr>`;
             });
           } else {
             tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:red;">Дані відсутні</td></tr>';
