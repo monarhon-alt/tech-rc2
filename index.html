@@ -9,117 +9,99 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100% !important;
-      height: 100% !important;
-      overflow: hidden !important;
-      background-color: #e3f2fd;
-      -webkit-text-size-adjust: 100%;
+      margin: 0; padding: 0; width: 100% !important; height: 100% !important;
+      overflow: hidden !important; background-color: #e3f2fd; -webkit-text-size-adjust: 100%;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; touch-action: pan-y; }
     form { display: flex; flex-direction: column; width: 100%; max-width: 450px; margin: 0 auto; padding: 0 12px 10px 12px; background-color: #e3f2fd; overflow: hidden; }
-    .content-scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; padding-bottom: 4px; scrollbar-width: none; }
-    .content-scrollable::-webkit-scrollbar { display: none; }
-    .header { font-size: 13px; font-weight: 800; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); color: #ffffff; padding: 10px; margin: 0 0 6px 0; text-align: center; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); line-height: 1.2; letter-spacing: 0.5px; text-transform: uppercase; }
-    .status-btn-container { padding: 0 0 4px 0; }
-    .status-btn-trigger { width: 100%; background: #334155; color: #ffffff; border: 1px solid #1e293b; padding: 10px; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 3px 0px #1e293b, 0 4px 6px rgba(0,0,0,0.15); -webkit-tap-highlight-color: transparent; }
-    .card { background: #ffffff; padding: 8px 12px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); }
-    label { font-weight: 700; font-size: 11px; color: #475569; display: block; margin-bottom: 4px; }
-    .scan-input { width: 100%; border: 2px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 16px !important; font-weight: 700; color: #0f172a; height: 38px; background-color: #f8fafc; }
-    .scan-input:focus { border-color: #2563eb; outline: none; background-color: #ffffff; }
-    .scan-input:valid { border-color: #10b981; background-color: #f0fdf4; }
-    .radio-group { display: flex; flex-direction: column; gap: 4px; }
-    .radio-row-top { display: flex; gap: 6px; width: 100%; }
-    .radio-box { flex: 1; text-align: center; min-width: 0; }
-    .radio-box input { display: none; }
-    .radio-box label { background: #f8fafc; border: 2px solid #e2e8f0; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #475569; padding: 2px 4px; line-height: 1.1; text-align: center; }
-    .radio-box input:disabled + label { background: #e2e8f0 !important; color: #94a3b8 !important; border-color: #cbd5e1 !important; opacity: 0.6; }
-    .radio-box.green-btn input:checked + label { background: #10b981; color: white; border-color: #10b981; }
-    .radio-box.orange-btn input:checked + label { background: #f59e0b; color: white; border-color: #f59e0b; }
-    .radio-box.force-red-btn input:checked + label { background: #ef4444; color: white; border-color: #ef4444; }
-    textarea { width: 100%; height: 38px; border: 2px solid #cbd5e1; border-radius: 6px; padding: 6px 8px; font-size: 16px !important; font-weight: 500; background-color: #f8fafc; resize: none; }
-    #statusMessage { padding: 8px; border-radius: 8px; font-weight: 700; font-size: 12px; margin-bottom: 6px; text-align: center; display: none; }
-    .msg-error { background: #fef2f2; color: #dc2626; border: 2px solid #fca5a5; }
-    .msg-success { background: #f0fdf4; color: #16a34a; border: 2px solid #86efac; }
-    .msg-loading { background: #fffbeb; color: #d97706; border: 2px solid #fcd34d; }
-    .submit-btn { width: 100%; background: #2563eb; color: white; border: none; padding: 10px; font-size: 14px; font-weight: 800; border-radius: 8px; height: 42px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; }
-    .submit-btn:disabled { background: #cbd5e1; color: #64748b; }
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 10000; justify-content: center; align-items: center; padding: 10px; backdrop-filter: blur(2px); }
-    .modal-content { background: white; width: 100%; max-width: 360px; border-radius: 12px; display: flex; flex-direction: column; max-height: 80vh; overflow: hidden; }
-    .modal-header { background: #0f172a; color: white; padding: 12px; font-weight: 700; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-    .modal-close { background: none; border: none; color: white; font-size: 22px; cursor: pointer; }
-    .modal-body { padding: 10px; overflow-y: auto; }
-    .status-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .status-table th, .status-table td { padding: 8px 6px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-    .status-table th { background: #f1f5f9; font-weight: 700; color: #475569; position: sticky; top: 0; }
-    .status-free { color: #16a34a; font-weight: 700; }
-    .status-busy { color: #dc2626; font-size: 11px; font-weight: 600; }
+    .content-wrapper { flex: 1; overflow-y: auto; overflow-x: hidden; padding-top: 15px; padding-bottom: 20px; }
+    .header-block { background-color: #1a237e; color: white; text-align: center; padding: 12px; border-radius: 8px; font-weight: 800; font-size: 16px; text-transform: uppercase; margin-bottom: 15px; width: 100%; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .status-btn { background-color: #37474f; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 14px; margin-bottom: 15px; width: 100%; cursor: pointer; text-transform: uppercase; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .form-group { background: white; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #bbdefb; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    label { font-size: 12px; font-weight: 700; color: #455a64; margin-bottom: 6px; display: block; text-transform: uppercase; }
+    input[type="number"], input[type="text"] { width: 100%; padding: 10px; border: 1px solid #90caf9; border-radius: 6px; font-size: 16px; background-color: #f8fbff; color: #0d47a1; transition: border-color 0.2s; }
+    input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #1976d2; background-color: #fff; box-shadow: 0 0 0 2px rgba(25,118,210,0.1); }
+    .radio-group { display: flex; flex-direction: column; gap: 8px; }
+    .radio-row { display: flex; gap: 8px; }
+    .radio-option { flex: 1; }
+    .radio-option input[type="radio"] { display: none; }
+    .radio-label { display: block; text-align: center; padding: 12px 8px; border: 1px solid #90caf9; border-radius: 6px; font-size: 12px; font-weight: 700; color: #455a64; background-color: #f8fbff; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+    .radio-option input[type="radio"]:checked + .radio-label { background-color: #1976d2; color: white; border-color: #1976d2; }
+    .radio-option.force input[type="radio"]:checked + .radio-label { background-color: #d32f2f; color: white; border-color: #d32f2f; }
+    .radio-option.return input[type="radio"]:checked + .radio-label { background-color: #f57c00; color: white; border-color: #f57c00; }
+    .submit-container { padding: 10px 12px 20px 12px; background-color: #e3f2fd; margin-top: auto; }
+    button[type="button"].submit-btn { width: 100%; padding: 15px; background-color: #2962ff; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: background-color 0.2s; box-shadow: 0 4px 6px rgba(41,98,255,0.2); }
+    button[type="button"].submit-btn:disabled { background-color: #b0bec5; cursor: not-allowed; box-shadow: none; }
+    #statusMessage { margin-top: 10px; padding: 10px; border-radius: 6px; font-size: 14px; font-weight: 600; text-align: center; display: none; }
+    .msg-success { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .msg-error { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+    .msg-loading { background-color: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 999; backdrop-filter: blur(2px); }
+    #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: white; border-radius: 12px; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; max-height: 80vh; }
+    .modal-header { background: #0d47a1; color: white; padding: 15px; text-align: center; font-weight: 700; position: relative; }
+    .close-btn { position: absolute; right: 15px; top: 15px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; background: none; border: none; }
+    .modal-content { padding: 0; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eeeeee; font-size: 13px; }
+    th { background-color: #f5f5f5; font-weight: 700; color: #455a64; position: sticky; top: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    td:first-child { font-weight: 600; color: #1565c0; }
   </style>
 </head>
 <body>
-
-  <form id="mainForm" onsubmit="event.preventDefault(); submitForm();">
-    <div class="content-scrollable">
-      <div class="header">СКЛАДСЬКА ТЕХНІКА<br>РОЗПОДІЛЬЧИЙ ЦЕНТР №2</div>
-      <div class="status-btn-container"><button type="button" class="status-btn-trigger" onclick="openStatusModal()">📋 Переглянути статус техніки</button></div>
-      <div class="card">
+  <form id="mainForm">
+    <div class="content-wrapper">
+      <div class="header-block">СКЛАДСЬКА ТЕХНІКА<br>РОЗПОДІЛЬЧИЙ ЦЕНТР №2</div>
+      <button type="button" class="status-btn" onclick="openStatusModal()">📋 Переглянути статус техніки</button>
+      
+      <div class="form-group">
         <label>1. ВІДСКАНУЙТЕ СВІЙ БЕЙДЖ</label>
-        <input type="text" id="badgeInput" class="scan-input" placeholder=" " autocomplete="off" pattern="^1010[0-9]{6}$" required>
+        <input type="number" id="badgeInput" required placeholder="">
       </div>
-      <div class="card">
+
+      <div class="form-group">
         <label>2. ВІДСКАНУЙТЕ ШТРИХ-КОД ТЕХНІКИ</label>
-        <input type="text" id="techInput" class="scan-input" placeholder=" " autocomplete="off" pattern="^[fF][oO][zZ][zZ][yY].+$" required>
+        <input type="number" id="techInput" required placeholder="">
       </div>
-      <div class="card">
+
+      <div class="form-group">
         <label>3. ДІЯ З ТЕХНІКОЮ</label>
         <div class="radio-group">
-          <div class="radio-row-top">
-            <div class="radio-box green-btn">
-              <input type="radio" id="actionTake" name="action" value="ВЗЯВ В РОБОТУ" required>
-              <label for="actionTake">ВЗЯВ В РОБОТУ</label>
-            </div>
-            <div class="radio-box orange-btn">
-              <input type="radio" id="actionReturn" name="action" value="ЗАВЕРШИВ РОБОТУ" required>
-              <label for="actionReturn">ЗАВЕРШИВ РОБОТУ</label>
-            </div>
+          <div class="radio-row">
+            <label class="radio-option"><input type="radio" name="action" value="ВЗЯВ В РОБОТУ" id="actionTake" required><span class="radio-label">ВЗЯВ В РОБОТУ</span></label>
+            <label class="radio-option return"><input type="radio" name="action" value="ЗАВЕРШИВ РОБОТУ" id="actionReturn"><span class="radio-label">ЗАВЕРШИВ РОБОТУ</span></label>
           </div>
-          <div class="radio-box force-red-btn">
-            <input type="radio" id="actionForce" name="action" value="ПРИМУСОВО ЗАБРАВ У ІНШОГО ПРАЦІВНИКА" required>
-            <label for="actionForce">ПРИМУСОВО ЗАБРАВ У ІНШОГО ПРАЦІВНИКА</label>
-          </div>
+          <label class="radio-option force"><input type="radio" name="action" value="ПРИМУСОВО ЗАБРАВ У ІНШОГО ПРАЦІВНИКА" id="actionForce"><span class="radio-label">ПРИМУСОВО ЗАБРАВ У ІНШОГО ПРАЦІВНИКА</span></label>
         </div>
       </div>
-      <div class="card">
+
+      <div class="form-group">
         <label>Коментар \ опис поломки (НЕОБОВ'ЯЗКОВО)</label>
-        <textarea id="commentInput" placeholder="Якщо техніка несправна..."></textarea>
+        <input type="text" id="commentInput" placeholder="Якщо техніка несправна...">
       </div>
     </div>
-    <div style="margin-top: auto; padding-top: 4px; width: 100%;">
+    
+    <div class="submit-container">
+      <button type="button" class="submit-btn" id="submitBtn" onclick="submitForm()" disabled>НАДІСЛАТИ ДАНІ</button>
       <div id="statusMessage"></div>
-      <button type="submit" id="submitBtn" class="submit-btn">НАДІСЛАТИ ДАНІ</button>
     </div>
   </form>
 
-  <div id="statusModal" class="modal-overlay" onclick="closeStatusModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <span>Поточний статус техніки</span>
-        <button type="button" class="modal-close" onclick="closeStatusModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <table class="status-table">
-          <thead><tr><th>ТЕХНІКА</th><th>СТАТУС</th></tr></thead>
-          <tbody id="statusTableBody">
-            <tr><td colspan="2" style="text-align:center; padding:15px; color:#64748b;">Завантаження...</td></tr>
-          </tbody>
-        </table>
-      </div>
+  <div id="overlay" style="display:none;" onclick="closeModal()"></div>
+  <div id="modal" style="display:none;">
+    <div class="modal-header">
+      Поточний статус техніки
+      <button type="button" class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-content">
+      <table id="statusTable">
+        <thead><tr><th>ТЕХНІКА</th><th>СТАТУС</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
   </div>
 
   <script>
-    // === ВСТАВТЕ ВАШЕ ПОСИЛАННЯ НА GOOGLE APPS SCRIPT СЮДЫ ===
+    // === ВАША ССЫЛКА НА GOOGLE SCRIPT ===
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxju0-GqThFLyHmf-owDt7pvDDEbBKNY5Wax0S089nQN2jWiIxmCsQe4Bs-qDjuY3Qp/exec";
 
     const form = document.getElementById('mainForm');
@@ -128,7 +110,7 @@
     const commentInput = document.getElementById('commentInput');
     const submitBtn = document.getElementById('submitBtn');
     const statusMsg = document.getElementById('statusMessage');
-    
+
     const actionTake = document.getElementById('actionTake');
     const actionReturn = document.getElementById('actionReturn');
     const actionForce = document.getElementById('actionForce');
@@ -144,89 +126,9 @@
       setInterval(() => { submitBtn.disabled = !form.checkValidity(); }, 300);
     };
 
-    window.addEventListener('resize', updateFormHeight);
-
-    function openStatusModal() {
-      document.getElementById('statusModal').style.display = 'flex';
-      document.getElementById('statusTableBody').innerHTML = '<tr><td colspan="2" style="text-align:center; padding:10px; color:#64748b;">Оновлення...</td></tr>';
-      
-      fetch(`${GOOGLE_SCRIPT_URL}?action=getAllTechStatus`)
-        .then(response => response.json())
-        .then(res => {
-          if(!res.success) {
-            document.getElementById('statusTableBody').innerHTML = '<tr><td colspan="2" style="color:red; text-align:center;">Помилка!</td></tr>';
-            return;
-          }
-          let html = "";
-          if(res.data.length === 0) {
-            html = '<tr><td colspan="2" style="text-align:center;">Список порожній</td></tr>';
-          } else {
-            res.data.forEach(item => {
-              let isFree = item.status === "ВІЛЬНА";
-              let statusClass = isFree ? "status-free" : "status-busy";
-              html += `<tr><td><b>${item.name}</b></td><td class="${statusClass}">${item.status}</td></tr>`;
-            });
-          }
-          document.getElementById('statusTableBody').innerHTML = html;
-        })
-        .catch(() => {
-          document.getElementById('statusTableBody').innerHTML = '<tr><td colspan="2" style="color:red; text-align:center;">Помилка мережі</td></tr>';
-        });
-    }
-
-    function closeStatusModal() { document.getElementById('statusModal').style.display = 'none'; }
-
-    [badgeInput, techInput].forEach(input => {
-      input.addEventListener('input', () => {
-        if (badgeInput.checkValidity() && techInput.checkValidity()) { checkSmartLock(); } else { resetLocks(); }
-      });
-    });
-
-    function resetLocks() { actionTake.disabled = false; actionReturn.disabled = false; actionForce.disabled = false; }
-
-    function checkSmartLock() {
-      showStatus("Перевірка техніки...", "loading");
-      
-      fetch(`${GOOGLE_SCRIPT_URL}?action=getTechStatus&badge=${badgeInput.value}&tech=${techInput.value}`)
-        .then(response => response.json())
-        .then(res => {
-          if (!res.success) { showStatus("Помилка: " + res.message, "error"); return; }
-          statusMsg.style.display = "none";
-          resetLocks();
-
-          if (!res.techFound) { showStatus("Техніку не знайдено в базі!", "error"); return; }
-          let me = res.currentWorker.trim();
-          let holder = res.techHolder.trim();
-
-          if (res.alreadyHasTech) {
-            actionTake.disabled = true;
-            if (holder !== "" && holder.toLowerCase() === me.toLowerCase()) {
-              actionForce.disabled = true; actionReturn.checked = true;
-            } else {
-              actionReturn.disabled = true; actionForce.checked = true;
-              showStatus("Зайнятий на іншій: " + res.alreadyHasTechName, "error");
-            }
-            return; 
-          }
-
-          if (holder !== "") {
-            if (holder.toLowerCase() !== me.toLowerCase()) {
-              actionTake.disabled = true; actionReturn.disabled = true; actionForce.checked = true;
-              showStatus("У роботі в: " + holder, "error");
-            } else {
-              actionTake.disabled = true; actionForce.disabled = true; actionReturn.checked = true;
-            }
-          } else {
-            actionReturn.disabled = true; actionForce.disabled = true; actionTake.checked = true;
-          }
-        })
-        .catch(() => showStatus("Помилка зв'язку при перевірці", "error"));
-    }
-
     function showStatus(text, type) {
       statusMsg.innerText = text;
-      statusMsg.className = "";
-      statusMsg.classList.add(type === 'error' ? 'msg-error' : type === 'success' ? 'msg-success' : 'msg-loading');
+      statusMsg.className = (type === 'error' ? 'msg-error' : type === 'success' ? 'msg-success' : 'msg-loading');
       statusMsg.style.display = "block";
     }
 
@@ -241,19 +143,24 @@
         comment: commentInput.value.trim()
       };
 
+      // ИЗМЕНЕНИЯ ЗДЕСЬ: Убрали no-cors, добавили text/plain чтобы избежать CORS preflight блока
       fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors", // дозволяє обходити обмеження CORS для Google Apps Script
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
         body: JSON.stringify(payload)
       })
-      .then(() => {
-        // Оскільки mode: 'no-cors' не повертає тіло відповіді, ми вважаємо успіхом сам факт надсилання
-        showStatus("Дані збережено!", "success");
-        setTimeout(resetForm, 1200);
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showStatus("Дані збережено!", "success");
+          setTimeout(resetForm, 1500);
+        } else {
+          showStatus("Помилка: " + data.message, "error");
+          submitBtn.disabled = false;
+        }
       })
       .catch(err => {
-        showStatus("Помилка збереження: " + err.message, "error");
+        showStatus("Помилка мережі: " + err.message, "error");
         submitBtn.disabled = false;
       });
     }
@@ -264,8 +171,74 @@
       if (actionTake) actionTake.checked = false;
       if (actionReturn) actionReturn.checked = false;
       if (actionForce) actionForce.checked = false;
-      resetLocks();
-      setTimeout(() => { badgeInput.focus(); }, 100);
+      badgeInput.focus();
+    }
+
+    let isChecking = false;
+    techInput.addEventListener("blur", function() {
+      const badge = badgeInput.value.trim();
+      const tech = techInput.value.trim();
+      
+      if (!badge || !tech || isChecking) return;
+      isChecking = true;
+      showStatus("Перевірка техніки...", "loading");
+
+      fetch(GOOGLE_SCRIPT_URL + "?action=getTechStatus&badge=" + badge + "&tech=" + tech)
+        .then(res => res.json())
+        .then(data => {
+          isChecking = false;
+          if (!data.success) {
+            showStatus(data.message, "error");
+            return;
+          }
+          statusMsg.style.display = "none";
+
+          if (data.techFound) {
+            if (data.techHolder === "" || data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
+              actionTake.checked = true;
+            } else if (data.techHolder.toLowerCase() === data.currentWorker.toLowerCase()) {
+              actionReturn.checked = true;
+            }
+          }
+          if (data.alreadyHasTech) {
+            showStatus("⚠️ Увага: У вас вже є техніка: " + data.alreadyHasTechName + ". Спочатку здайте її!", "error");
+            actionTake.checked = false;
+            submitBtn.disabled = true;
+          }
+        })
+        .catch(err => {
+          isChecking = false;
+          statusMsg.style.display = "none";
+        });
+    });
+
+    function openStatusModal() {
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('modal').style.display = 'flex';
+      const tbody = document.querySelector('#statusTable tbody');
+      tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Завантаження...</td></tr>';
+
+      fetch(GOOGLE_SCRIPT_URL + "?action=getAllTechStatus")
+        .then(response => response.json())
+        .then(data => {
+          tbody.innerHTML = '';
+          if (data.success && data.data.length > 0) {
+            data.data.forEach(item => {
+              let color = item.status === "ВІЛЬНА" ? "green" : "red";
+              tbody.innerHTML += `<tr><td>${item.name}</td><td style="color:${color};font-weight:600;">${item.status}</td></tr>`;
+            });
+          } else {
+            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:red;">Дані відсутні</td></tr>';
+          }
+        })
+        .catch(err => {
+          tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:red;">Помилка мережі</td></tr>';
+        });
+    }
+
+    function closeModal() {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('modal').style.display = 'none';
     }
   </script>
 </body>
