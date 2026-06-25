@@ -55,12 +55,12 @@
       
       <div class="form-group">
         <label>1. ВІДСКАНУЙТЕ СВІЙ БЕЙДЖ</label>
-        <input type="number" id="badgeInput" required placeholder="">
+        <input type="text" inputmode="numeric" id="badgeInput" required placeholder="">
       </div>
 
       <div class="form-group">
         <label>2. ВІДСКАНУЙТЕ ШТРИХ-КОД ТЕХНІКИ</label>
-        <input type="number" id="techInput" required placeholder="">
+        <input type="text" id="techInput" required placeholder="">
       </div>
 
       <div class="form-group">
@@ -101,7 +101,6 @@
   </div>
 
   <script>
-    // === ВАША ССЫЛКА НА GOOGLE SCRIPT ===
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxju0-GqThFLyHmf-owDt7pvDDEbBKNY5Wax0S089nQN2jWiIxmCsQe4Bs-qDjuY3Qp/exec";
 
     const form = document.getElementById('mainForm');
@@ -126,6 +125,21 @@
       setInterval(() => { submitBtn.disabled = !form.checkValidity(); }, 300);
     };
 
+    // ДОБАВЛЕНО: Обработка нажатия Enter сканером для автоматического перехода по полям
+    badgeInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        techInput.focus();
+      }
+    });
+
+    techInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        techInput.blur(); // Вызовет событие проверки техники
+      }
+    });
+
     function showStatus(text, type) {
       statusMsg.innerText = text;
       statusMsg.className = (type === 'error' ? 'msg-error' : type === 'success' ? 'msg-success' : 'msg-loading');
@@ -143,7 +157,6 @@
         comment: commentInput.value.trim()
       };
 
-      // ИЗМЕНЕНИЯ ЗДЕСЬ: Убрали no-cors, добавили text/plain чтобы избежать CORS preflight блока
       fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
