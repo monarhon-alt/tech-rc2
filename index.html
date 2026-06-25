@@ -146,7 +146,8 @@
       // ИЗМЕНЕНИЯ ЗДЕСЬ: Убрали no-cors, добавили text/plain чтобы избежать CORS preflight блока
       fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        redirect: "follow",
         body: JSON.stringify(payload)
       })
       .then(response => response.json())
