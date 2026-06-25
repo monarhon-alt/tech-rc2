@@ -114,9 +114,19 @@
     const actionReturn = document.getElementById('actionReturn');
     const actionForce = document.getElementById('actionForce');
 
-    // Переменные для хранения скрытых оригинальных штрих-кодов
     let rawBadgeValue = "";
     let rawTechValue = "";
+
+    // Вспомогательная функция для визуального форматирования текста техники на лету
+    function getCleanTechName(techCode) {
+      if (techCode.toUpperCase().startsWith("FOZZY ")) {
+        let name = techCode.substring(6);
+        name = name.replace("Elektronavantazhuvach", "Електронавантажувач");
+        name = name.replace("RichTrak", "Річтрак");
+        return name;
+      }
+      return techCode;
+    }
 
     function updateFormHeight() {
       form.style.height = window.innerHeight + 'px';
@@ -127,40 +137,46 @@
       badgeInput.focus();
       updateFormHeight();
       setInterval(() => { 
-        // Валидация формы опирается на наличие сохраненных оригинальных кодов
         submitBtn.disabled = (!rawBadgeValue || !rawTechValue || !document.querySelector('input[name="action"]:checked')); 
       }, 300);
     };
 
+    // МГНОВЕННАЯ замена при сканировании бэйджа
     badgeInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        if (badgeInput.value.trim() !== "") {
-          rawBadgeValue = badgeInput.value.trim(); // Сохраняем оригинал кода
+        let val = badgeInput.value.trim();
+        if (val !== "") {
+          rawBadgeValue = val;
+          // Временно пишем "Завантаження...", пока сервер не вернет настоящее ФИО
+          badgeInput.value = "Завантаження працівника...";
           techInput.focus();
         }
       }
     });
 
+    // МГНОВЕННАЯ замена при сканировании техники
     techInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        if (techInput.value.trim() !== "") {
-          rawTechValue = techInput.value.trim(); // Сохраняем оригинал кода
-          techInput.blur(); 
+        let val = techInput.value.trim();
+        if (val !== "") {
+          rawTechValue = val;
+          // Сразу делаем имя красивым на экране, не дожидаясь ответа сервера
+          techInput.value = getCleanTechName(val);
+          triggerStatusCheck(); // Запускаем проверку
         }
       }
     });
 
-    // Обработка ручного ввода или вставки (на случай работы без Enter)
     badgeInput.addEventListener("input", function() {
-      if (!badgeInput.value.includes(" (")) {
+      if (!badgeInput.value.includes("Завантаження") && rawBadgeValue === "") {
         rawBadgeValue = badgeInput.value.trim();
       }
     });
 
     techInput.addEventListener("input", function() {
-      if (!techInput.value.includes(" (")) {
+      if (rawTechValue === "") {
         rawTechValue = techInput.value.trim();
       }
     });
@@ -221,7 +237,9 @@
     }
 
     let isChecking = false;
-    techInput.addEventListener("blur", function() {
+    
+    // Вынесли логику проверки в отдельную функцию, которая вызывается мгновенно
+    function triggerStatusCheck() {
       const badge = rawBadgeValue;
       const tech = rawTechValue;
       
@@ -235,48 +253,34 @@
           isChecking = false;
           if (!data.success) {
             showStatus(data.message, "error");
+            if (badgeInput.value === "Завантаження працівника...") badgeInput.value = rawBadgeValue;
             return;
           }
           statusMsg.style.display = "none";
 
-          // Подмена штрих-кода сотрудника на его ФИО (если оно вернулось)
+          // Подменяем временный текст на настоящее ФИО от сервера
           if (data.currentWorker) {
             badgeInput.value = data.currentWorker;
-          }
-
-          // Красивое преобразование названия техники (Убирает "FOZZY " и делает понятный вид)
-          if (tech.toUpperCase().startsWith("FOZZY ")) {
-            let cleanName = tech.substring(6); // Срезаем слово "FOZZY "
-            cleanName = cleanName.replace("Elektronavantazhuvach", "Електронавантажувач");
-            cleanName = cleanName.replace("RichTrak", "Річтрак");
-            techInput.value = cleanName;
+          } else if (badgeInput.value === "Завантаження працівника...") {
+            badgeInput.value = rawBadgeValue;
           }
 
           if (data.techFound) {
-            // СЛУЧАЙ 1: Техника полностью свободна
             if (data.techHolder === "") {
               actionTake.checked = true;
-              
-              // Наглухо блокируем кнопку принудительного изъятия
               actionForce.checked = false;
               actionForce.disabled = true;
               actionForce.closest('.radio-option').style.opacity = "0.3";
               actionForce.closest('.radio-option').style.pointerEvents = "none";
             } 
-            // СЛУЧАЙ 2: Техника занята ДРУГИМ сотрудником
             else if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
               actionTake.checked = true;
-              
-              // Разрешаем принудительное изъятие
               actionForce.disabled = false;
               actionForce.closest('.radio-option').style.opacity = "1";
               actionForce.closest('.radio-option').style.pointerEvents = "auto";
             } 
-            // СЛУЧАЙ 3: Техника уже на текущем сотруднике
             else if (data.techHolder.toLowerCase() === data.currentWorker.toLowerCase()) {
               actionReturn.checked = true;
-              
-              // У себя забирать нельзя — блокируем кнопку
               actionForce.checked = false;
               actionForce.disabled = true;
               actionForce.closest('.radio-option').style.opacity = "0.3";
@@ -293,7 +297,16 @@
         .catch(err => {
           isChecking = false;
           statusMsg.style.display = "none";
+          if (badgeInput.value === "Завантаження працівника...") badgeInput.value = rawBadgeValue;
         });
+    }
+
+    // Сохраняем на случай ручной потери фокуса
+    techInput.addEventListener("blur", triggerStatusCheck);
+    badgeInput.addEventListener("blur", function() {
+      if (badgeInput.value.trim() !== "" && !badgeInput.value.includes("Завантаження") && rawBadgeValue === "") {
+        rawBadgeValue = badgeInput.value.trim();
+      }
     });
 
     function openStatusModal() {
@@ -309,11 +322,7 @@
           if (data.success && data.data.length > 0) {
             data.data.forEach(item => {
               let color = item.status === "ВІЛЬНА" ? "green" : "red";
-              let displayName = item.name;
-              if (displayName.toUpperCase().startsWith("FOZZY ")) {
-                displayName = displayName.substring(6).replace("Elektronavantazhuvach", "Електронавантажувач").replace("RichTrak", "Річтрак");
-              }
-              tbody.innerHTML += `<tr><td>${displayName}</td><td style="color:${color};font-weight:600;">${item.status}</td></tr>`;
+              tbody.innerHTML += `<tr><td>${getCleanTechName(item.name)}</td><td style="color:${color};font-weight:600;">${item.status}</td></tr>`;
             });
           } else {
             tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:red;">Дані відсутні</td></tr>';
