@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang=\"uk\">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
@@ -13,36 +13,44 @@
       overflow: hidden !important; background-color: #e3f2fd; -webkit-text-size-adjust: 100%;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; touch-action: pan-y; }
-    form { display: flex; flex-direction: column; width: 100%; max-width: 450px; margin: 0 auto; padding: 0 12px 10px 12px; background-color: #e3f2fd; overflow: hidden; }
-    .content-wrapper { flex: 1; overflow-y: auto; overflow-x: hidden; padding-top: 15px; padding-bottom: 20px; }
-    .header-block { background-color: #1a237e; color: white; text-align: center; padding: 12px; border-radius: 8px; font-weight: 800; font-size: 16px; text-transform: uppercase; margin-bottom: 15px; width: 100%; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .status-btn { background-color: #37474f; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 14px; margin-bottom: 15px; width: 100%; cursor: pointer; text-transform: uppercase; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .form-group { background: white; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #bbdefb; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    label { font-size: 12px; font-weight: 700; color: #455a64; margin-bottom: 6px; display: block; text-transform: uppercase; }
-    input[type="number"], input[type="text"] { width: 100%; padding: 10px; border: 1px solid #90caf9; border-radius: 6px; font-size: 16px; background-color: #f8fbff; color: #0d47a1; transition: border-color 0.2s; }
+    form { display: flex; flex-direction: column; width: 100%; max-width: 450px; margin: 0 auto; padding: 0 10px 5px 10px; background-color: #e3f2fd; overflow: hidden; height: 100%; }
+    .content-wrapper { flex: 1; overflow-y: auto; overflow-x: hidden; padding-top: 8px; padding-bottom: 5px; }
+    
+    /* Компактні відступи */
+    .header-block { background-color: #1a237e; color: white; text-align: center; padding: 10px; border-radius: 6px; font-weight: 800; font-size: 14px; text-transform: uppercase; margin-bottom: 8px; width: 100%; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .status-btn { background-color: #37474f; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: 700; font-size: 13px; margin-bottom: 8px; width: 100%; cursor: pointer; text-transform: uppercase; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .form-group { background: white; padding: 8px 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #bbdefb; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    label { font-size: 11px; font-weight: 700; color: #455a64; margin-bottom: 4px; display: block; text-transform: uppercase; }
+    
+    input[type="number"], input[type="text"] { width: 100%; padding: 8px; border: 1px solid #90caf9; border-radius: 6px; font-size: 14px; background-color: #f8fbff; color: #0d47a1; transition: border-color 0.2s; }
     input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #1976d2; background-color: #fff; box-shadow: 0 0 0 2px rgba(25,118,210,0.1); }
-    .radio-group { display: flex; flex-direction: column; gap: 8px; }
-    .radio-row { display: flex; gap: 8px; }
+    
+    .radio-group { display: flex; flex-direction: column; gap: 5px; }
+    .radio-row { display: flex; gap: 5px; }
     .radio-option { flex: 1; transition: all 0.2s ease; }
     .radio-option input[type="radio"] { display: none; }
-    .radio-label { display: block; text-align: center; padding: 12px 8px; border: 1px solid #90caf9; border-radius: 6px; font-size: 12px; font-weight: 700; color: #455a64; background-color: #f8fbff; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+    .radio-label { display: block; text-align: center; padding: 10px 4px; border: 1px solid #90caf9; border-radius: 6px; font-size: 11px; font-weight: 700; color: #455a64; background-color: #f8fbff; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+    
     .radio-option input[type="radio"]:checked + .radio-label { background-color: #1976d2; color: white; border-color: #1976d2; }
     .radio-option.force input[type="radio"]:checked + .radio-label { background-color: #d32f2f; color: white; border-color: #d32f2f; }
     .radio-option.return input[type="radio"]:checked + .radio-label { background-color: #f57c00; color: white; border-color: #f57c00; }
-    .submit-container { padding: 10px 12px 20px 12px; background-color: #e3f2fd; margin-top: auto; }
-    button[type="button"].submit-btn { width: 100%; padding: 15px; background-color: #2962ff; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: background-color 0.2s; box-shadow: 0 4px 6px rgba(41,98,255,0.2); }
+    
+    .submit-container { padding: 5px 0 10px 0; background-color: #e3f2fd; margin-top: auto; }
+    button[type="button"].submit-btn { width: 100%; padding: 12px; background-color: #2962ff; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: background-color 0.2s; box-shadow: 0 4px 6px rgba(41,98,255,0.2); }
     button[type="button"].submit-btn:disabled { background-color: #b0bec5; cursor: not-allowed; box-shadow: none; }
-    #statusMessage { margin-top: 10px; padding: 10px; border-radius: 6px; font-size: 14px; font-weight: 600; text-align: center; display: none; }
+    
+    #statusMessage { margin-top: 8px; padding: 8px; border-radius: 6px; font-size: 13px; font-weight: 600; text-align: center; display: none; }
     .msg-success { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
     .msg-error { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
     .msg-loading { background-color: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+    
     #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 999; backdrop-filter: blur(2px); }
-    #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: white; border-radius: 12px; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; max-height: 80vh; }
-    .modal-header { background: #0d47a1; color: white; padding: 15px; text-align: center; font-weight: 700; position: relative; }
-    .close-btn { position: absolute; right: 15px; top: 15px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; background: none; border: none; }
+    #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 400px; background: white; border-radius: 8px; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; }
+    .modal-header { background: #0d47a1; color: white; padding: 12px; text-align: center; font-weight: 700; position: relative; font-size: 14px; }
+    .close-btn { position: absolute; right: 12px; top: 12px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; background: none; border: none; line-height: 1; }
     .modal-content { padding: 0; overflow-y: auto; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eeeeee; font-size: 13px; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eeeeee; font-size: 12px; }
     th { background-color: #f5f5f5; font-weight: 700; color: #455a64; position: sticky; top: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
     td:first-child { font-weight: 600; color: #1565c0; }
   </style>
@@ -101,6 +109,7 @@
   </div>
 
   <script>
+    // ВАЖЛИВО: Переконайтесь, що тут стоїть посилання на ваше ОСТАННЄ РОЗГОРТАННЯ
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxju0-GqThFLyHmf-owDt7pvDDEbBKNY5Wax0S089nQN2jWiIxmCsQe4Bs-qDjuY3Qp/exec";
 
     const form = document.getElementById('mainForm');
@@ -121,16 +130,6 @@
     let rawBadgeValue = "";
     let rawTechValue = "";
 
-    function getCleanTechName(techCode) {
-      if (techCode.toUpperCase().startsWith("FOZZY ")) {
-        let name = techCode.substring(6);
-        name = name.replace("Elektronavantazhuvach", "Електронавантажувач");
-        name = name.replace("RichTrak", "Річтрак");
-        return name;
-      }
-      return techCode;
-    }
-
     function updateFormHeight() {
       form.style.height = window.innerHeight + 'px';
       window.scrollTo(0, 0);
@@ -144,7 +143,6 @@
       }, 300);
     };
 
-    // Асинхронный предзапрос имени сотрудника сразу после ввода бэйджа
     function prefetchWorkerName(badge) {
       if (!badge) return;
       fetch(GOOGLE_SCRIPT_URL + "?action=getTechStatus&badge=" + badge + "&tech=")
@@ -168,7 +166,7 @@
         if (val !== "") {
           rawBadgeValue = val;
           badgeInput.value = "Завантаження...";
-          prefetchWorkerName(val); // Запускаем фоновый поиск ФИО
+          prefetchWorkerName(val);
           techInput.focus();
         }
       }
@@ -180,7 +178,6 @@
         let val = techInput.value.trim();
         if (val !== "") {
           rawTechValue = val;
-          techInput.value = getCleanTechName(val); // Мгновенно убираем FOZZY
           triggerStatusCheck();
         }
       }
@@ -197,11 +194,8 @@
 
     techInput.addEventListener("blur", function() {
       let val = techInput.value.trim();
-      if (val !== "" && (val.toUpperCase().includes("FOZZY") || /^\d+$/.test(val))) {
+      if (val !== "" && val !== rawTechValue) {
         rawTechValue = val;
-        techInput.value = getCleanTechName(val);
-        triggerStatusCheck();
-      } else if (rawTechValue !== "" && val !== "") {
         triggerStatusCheck();
       }
     });
@@ -212,9 +206,7 @@
       statusMsg.style.display = "block";
     }
 
-    // Управление доступностью кнопок действий в зависимости от ситуации
     function setRadioState(mode) {
-      // Сброс в исходное состояние
       actionTake.disabled = false; actionReturn.disabled = false; actionForce.disabled = false;
       containerTake.style.opacity = "1"; containerTake.style.pointerEvents = "auto";
       containerReturn.style.opacity = "1"; containerReturn.style.pointerEvents = "auto";
@@ -222,20 +214,16 @@
 
       if (mode === 'FREE') {
         actionTake.checked = true;
-        
         actionReturn.disabled = true; containerReturn.style.opacity = "0.25"; containerReturn.style.pointerEvents = "none";
         actionForce.disabled = true; containerForce.style.opacity = "0.25"; containerForce.style.pointerEvents = "none";
       } 
       else if (mode === 'OWNED') {
         actionReturn.checked = true;
-        
         actionTake.disabled = true; containerTake.style.opacity = "0.25"; containerTake.style.pointerEvents = "none";
         actionForce.disabled = true; containerForce.style.opacity = "0.25"; containerForce.style.pointerEvents = "none";
       } 
       else if (mode === 'OTHER') {
-        actionForce.checked = true; // ПРИНУДИТЕЛЬНО ПЕРЕКЛЮЧАЕМ НА ИЗЪЯТИЕ
-        
-        // Намертво блокируем обычное взятие и чужую сдачу техники
+        actionForce.checked = true;
         actionTake.disabled = true; containerTake.style.opacity = "0.25"; containerTake.style.pointerEvents = "none";
         actionReturn.disabled = true; containerReturn.style.opacity = "0.25"; containerReturn.style.pointerEvents = "none";
       }
@@ -313,6 +301,10 @@
             badgeInput.value = data.currentWorker;
           }
 
+          if (data.techFound && data.techName) {
+            techInput.value = data.techName;
+          }
+
           if (data.techFound) {
             if (data.techHolder === "") {
               setRadioState('FREE');
@@ -326,7 +318,6 @@
           }
           
           if (data.alreadyHasTech) {
-            // Блокируем только если сотрудник пытается взять НОВУЮ технику, имея старую
             if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
               showStatus("⚠️ Увага: У вас вже є техніка: " + data.alreadyHasTechName + ". Спочатку здайте її!", "error");
               actionTake.checked = false;
@@ -354,7 +345,7 @@
           if (data.success && data.data.length > 0) {
             data.data.forEach(item => {
               let color = item.status === "ВІЛЬНА" ? "green" : "red";
-              tbody.innerHTML += `<tr><td>${getCleanTechName(item.name)}</td><td style="color:${color};font-weight:600;">${item.status}</td></tr>`;
+              tbody.innerHTML += `<tr><td>${item.name}</td><td style="color:${color};font-weight:600;">${item.status}</td></tr>`;
             });
           } else {
             tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:red;">Дані відсутні</td></tr>';
