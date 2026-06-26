@@ -16,7 +16,6 @@
     form { display: flex; flex-direction: column; width: 100%; max-width: 450px; margin: 0 auto; padding: 0 10px 5px 10px; background-color: #e3f2fd; overflow: hidden; height: 100%; }
     .content-wrapper { flex: 1; overflow-y: auto; overflow-x: hidden; padding-top: 8px; padding-bottom: 5px; }
     
-    /* Компактні відступи */
     .header-block { background-color: #1a237e; color: white; text-align: center; padding: 10px; border-radius: 6px; font-weight: 800; font-size: 14px; text-transform: uppercase; margin-bottom: 8px; width: 100%; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .status-btn { background-color: #37474f; color: white; text-align: center; padding: 8px; border-radius: 6px; font-weight: 700; font-size: 13px; margin-bottom: 8px; width: 100%; cursor: pointer; text-transform: uppercase; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .form-group { background: white; padding: 8px 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #bbdefb; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
@@ -109,7 +108,7 @@
   </div>
 
   <script>
-    // ВАЖЛИВО: Переконайтесь, що тут стоїть посилання на ваше ОСТАННЄ РОЗГОРТАННЯ
+    // ВАЖЛИВО: Оновіть це посилання, коли створите "Нове розгортання"
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxju0-GqThFLyHmf-owDt7pvDDEbBKNY5Wax0S089nQN2jWiIxmCsQe4Bs-qDjuY3Qp/exec";
 
     const form = document.getElementById('mainForm');
@@ -135,7 +134,18 @@
       window.scrollTo(0, 0);
     }
 
+    // Повністю блокуємо кнопки до завершення перевірки
+    function disableAllRadios() {
+      actionTake.checked = false; actionReturn.checked = false; actionForce.checked = false;
+      actionTake.disabled = true; actionReturn.disabled = true; actionForce.disabled = true;
+      
+      containerTake.style.opacity = "0.25"; containerTake.style.pointerEvents = "none";
+      containerReturn.style.opacity = "0.25"; containerReturn.style.pointerEvents = "none";
+      containerForce.style.opacity = "0.25"; containerForce.style.pointerEvents = "none";
+    }
+
     window.onload = function() {
+      disableAllRadios(); // Приховуємо вибір при завантаженні
       badgeInput.focus();
       updateFormHeight();
       setInterval(() => { 
@@ -206,26 +216,27 @@
       statusMsg.style.display = "block";
     }
 
+    // Активує ТІЛЬКИ правильну кнопку і автоматично її обирає
     function setRadioState(mode) {
-      actionTake.disabled = false; actionReturn.disabled = false; actionForce.disabled = false;
-      containerTake.style.opacity = "1"; containerTake.style.pointerEvents = "auto";
-      containerReturn.style.opacity = "1"; containerReturn.style.pointerEvents = "auto";
-      containerForce.style.opacity = "1"; containerForce.style.pointerEvents = "auto";
+      disableAllRadios(); // Спочатку блокуємо всі
 
       if (mode === 'FREE') {
+        actionTake.disabled = false;
+        containerTake.style.opacity = "1";
+        containerTake.style.pointerEvents = "auto";
         actionTake.checked = true;
-        actionReturn.disabled = true; containerReturn.style.opacity = "0.25"; containerReturn.style.pointerEvents = "none";
-        actionForce.disabled = true; containerForce.style.opacity = "0.25"; containerForce.style.pointerEvents = "none";
       } 
       else if (mode === 'OWNED') {
+        actionReturn.disabled = false;
+        containerReturn.style.opacity = "1";
+        containerReturn.style.pointerEvents = "auto";
         actionReturn.checked = true;
-        actionTake.disabled = true; containerTake.style.opacity = "0.25"; containerTake.style.pointerEvents = "none";
-        actionForce.disabled = true; containerForce.style.opacity = "0.25"; containerForce.style.pointerEvents = "none";
       } 
       else if (mode === 'OTHER') {
+        actionForce.disabled = false;
+        containerForce.style.opacity = "1";
+        containerForce.style.pointerEvents = "auto";
         actionForce.checked = true;
-        actionTake.disabled = true; containerTake.style.opacity = "0.25"; containerTake.style.pointerEvents = "none";
-        actionReturn.disabled = true; containerReturn.style.opacity = "0.25"; containerReturn.style.pointerEvents = "none";
       }
     }
 
@@ -267,12 +278,7 @@
       rawBadgeValue = ""; rawTechValue = "";
       submitBtn.disabled = true; statusMsg.style.display = "none";
       
-      actionTake.checked = false; actionReturn.checked = false; actionForce.checked = false;
-      actionTake.disabled = false; actionReturn.disabled = false; actionForce.disabled = false;
-      
-      containerTake.style.opacity = "1"; containerTake.style.pointerEvents = "auto";
-      containerReturn.style.opacity = "1"; containerReturn.style.pointerEvents = "auto";
-      containerForce.style.opacity = "1"; containerForce.style.pointerEvents = "auto";
+      disableAllRadios(); // Блокуємо кнопки для наступного працівника
       
       badgeInput.focus();
     }
@@ -285,6 +291,9 @@
       if (!badge || !tech || isChecking) return;
       isChecking = true;
       showStatus("Перевірка техніки...", "loading");
+      
+      // Блокуємо вибір на час перевірки, щоб не клацнули випадково
+      disableAllRadios();
 
       fetch(GOOGLE_SCRIPT_URL + "?action=getTechStatus&badge=" + badge + "&tech=" + tech)
         .then(res => res.json())
@@ -320,8 +329,7 @@
           if (data.alreadyHasTech) {
             if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
               showStatus("⚠️ Увага: У вас вже є техніка: " + data.alreadyHasTechName + ". Спочатку здайте її!", "error");
-              actionTake.checked = false;
-              actionForce.checked = false;
+              disableAllRadios(); // Блокуємо дії, якщо вже є техніка
               submitBtn.disabled = true;
             }
           }
