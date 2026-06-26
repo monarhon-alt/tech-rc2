@@ -108,7 +108,7 @@
   </div>
 
   <script>
-    // ВАЖЛИВО: Оновіть це посилання, коли створите "Нове розгортання"
+    // ВАЖЛИВО: Оновіть це посилання на свій поточний Web App URL
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxju0-GqThFLyHmf-owDt7pvDDEbBKNY5Wax0S089nQN2jWiIxmCsQe4Bs-qDjuY3Qp/exec";
 
     const form = document.getElementById('mainForm');
@@ -128,13 +128,17 @@
 
     let rawBadgeValue = "";
     let rawTechValue = "";
+    
+    // Таймери для автоматичної перевірки
+    let badgeTimer;
+    let techTimer;
+    const WAIT_TIME = 600; // Чекаємо 0.6 секунди після останнього введеного символу
 
     function updateFormHeight() {
       form.style.height = window.innerHeight + 'px';
       window.scrollTo(0, 0);
     }
 
-    // Повністю блокуємо кнопки до завершення перевірки
     function disableAllRadios() {
       actionTake.checked = false; actionReturn.checked = false; actionForce.checked = false;
       actionTake.disabled = true; actionReturn.disabled = true; actionForce.disabled = true;
@@ -145,7 +149,7 @@
     }
 
     window.onload = function() {
-      disableAllRadios(); // Приховуємо вибір при завантаженні
+      disableAllRadios();
       badgeInput.focus();
       updateFormHeight();
       setInterval(() => { 
@@ -169,46 +173,60 @@
         });
     }
 
+    // --- ОБРОБКА БЕЙДЖА (З РОЗУМНИМ ТАЙМЕРОМ) ---
+    badgeInput.addEventListener("input", function() {
+      clearTimeout(badgeTimer);
+      let val = badgeInput.value.trim();
+      if (val !== "" && !val.includes("Завантаження")) {
+        badgeTimer = setTimeout(() => {
+          processBadgeInput(val);
+        }, WAIT_TIME);
+      }
+    });
+
     badgeInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        let val = badgeInput.value.trim();
-        if (val !== "") {
-          rawBadgeValue = val;
-          badgeInput.value = "Завантаження...";
-          prefetchWorkerName(val);
-          techInput.focus();
-        }
+        clearTimeout(badgeTimer); // Зупиняємо таймер, бо отримали миттєвий Enter
+        processBadgeInput(badgeInput.value.trim());
+      }
+    });
+
+    function processBadgeInput(val) {
+      if (val !== "" && !val.includes("Завантаження") && /^\d+$/.test(val)) {
+        rawBadgeValue = val;
+        badgeInput.value = "Завантаження...";
+        prefetchWorkerName(val);
+        techInput.focus(); // Автоматично перекидаємо курсор на поле техніки!
+      }
+    }
+
+    // --- ОБРОБКА ТЕХНІКИ (З РОЗУМНИМ ТАЙМЕРОМ) ---
+    techInput.addEventListener("input", function() {
+      clearTimeout(techTimer);
+      let val = techInput.value.trim();
+      if (val !== "") {
+        techTimer = setTimeout(() => {
+          processTechInput(val);
+        }, WAIT_TIME);
       }
     });
 
     techInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        let val = techInput.value.trim();
-        if (val !== "") {
-          rawTechValue = val;
-          triggerStatusCheck();
-        }
+        clearTimeout(techTimer); // Зупиняємо таймер, бо отримали миттєвий Enter
+        processTechInput(techInput.value.trim());
       }
     });
 
-    badgeInput.addEventListener("blur", function() {
-      let val = badgeInput.value.trim();
-      if (val !== "" && !val.includes("Завантаження") && /^\d+$/.test(val)) {
-        rawBadgeValue = val;
-        badgeInput.value = "Завантаження...";
-        prefetchWorkerName(val);
-      }
-    });
-
-    techInput.addEventListener("blur", function() {
-      let val = techInput.value.trim();
+    function processTechInput(val) {
       if (val !== "" && val !== rawTechValue) {
         rawTechValue = val;
         triggerStatusCheck();
+        techInput.blur(); // Програмно прибираємо курсор з поля, щоб сховати клавіатуру!
       }
-    });
+    }
 
     function showStatus(text, type) {
       statusMsg.innerText = text;
@@ -216,9 +234,8 @@
       statusMsg.style.display = "block";
     }
 
-    // Активує ТІЛЬКИ правильну кнопку і автоматично її обирає
     function setRadioState(mode) {
-      disableAllRadios(); // Спочатку блокуємо всі
+      disableAllRadios(); 
 
       if (mode === 'FREE') {
         actionTake.disabled = false;
@@ -277,9 +294,7 @@
       badgeInput.value = ""; techInput.value = ""; commentInput.value = "";
       rawBadgeValue = ""; rawTechValue = "";
       submitBtn.disabled = true; statusMsg.style.display = "none";
-      
-      disableAllRadios(); // Блокуємо кнопки для наступного працівника
-      
+      disableAllRadios();
       badgeInput.focus();
     }
 
@@ -291,8 +306,6 @@
       if (!badge || !tech || isChecking) return;
       isChecking = true;
       showStatus("Перевірка техніки...", "loading");
-      
-      // Блокуємо вибір на час перевірки, щоб не клацнули випадково
       disableAllRadios();
 
       fetch(GOOGLE_SCRIPT_URL + "?action=getTechStatus&badge=" + badge + "&tech=" + tech)
@@ -306,22 +319,15 @@
           }
           statusMsg.style.display = "none";
 
-          if (data.currentWorker) {
-            badgeInput.value = data.currentWorker;
-          }
-
-          if (data.techFound && data.techName) {
-            techInput.value = data.techName;
-          }
+          if (data.currentWorker) badgeInput.value = data.currentWorker;
+          if (data.techFound && data.techName) techInput.value = data.techName;
 
           if (data.techFound) {
             if (data.techHolder === "") {
               setRadioState('FREE');
-            } 
-            else if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
+            } else if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
               setRadioState('OTHER');
-            } 
-            else if (data.techHolder.toLowerCase() === data.currentWorker.toLowerCase()) {
+            } else if (data.techHolder.toLowerCase() === data.currentWorker.toLowerCase()) {
               setRadioState('OWNED');
             }
           }
@@ -329,7 +335,7 @@
           if (data.alreadyHasTech) {
             if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
               showStatus("⚠️ Увага: У вас вже є техніка: " + data.alreadyHasTechName + ". Спочатку здайте її!", "error");
-              disableAllRadios(); // Блокуємо дії, якщо вже є техніка
+              disableAllRadios(); 
               submitBtn.disabled = true;
             }
           }
@@ -340,6 +346,7 @@
         });
     }
 
+    // --- ФУНКЦІЇ МОДАЛЬНОГО ВІКНА ---
     function openStatusModal() {
       document.getElementById('overlay').style.display = 'block';
       document.getElementById('modal').style.display = 'flex';
