@@ -21,9 +21,23 @@
     .form-group { background: white; padding: 8px 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #bbdefb; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
     label { font-size: 11px; font-weight: 700; color: #455a64; margin-bottom: 4px; display: block; text-transform: uppercase; }
     
+    .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
     input[type="number"], input[type="text"] { width: 100%; padding: 8px; border: 1px solid #90caf9; border-radius: 6px; font-size: 14px; background-color: #f8fbff; color: #0d47a1; transition: border-color 0.2s; }
+    .input-wrapper input { padding-right: 36px; } /* Місце для хрестика */
     input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #1976d2; background-color: #fff; box-shadow: 0 0 0 2px rgba(25,118,210,0.1); }
     
+    /* Стиль для нових кнопок-хрестиків */
+    .clear-icon { 
+      position: absolute; right: 6px; 
+      width: 24px; height: 24px; 
+      background-color: #ffcdd2; color: #c62828; 
+      border: none; border-radius: 50%; 
+      font-size: 12px; font-weight: bold; 
+      cursor: pointer; display: none; align-items: center; justify-content: center; 
+      transition: all 0.2s; padding: 0; line-height: 1;
+    }
+    .clear-icon:hover { background-color: #ef9a9a; }
+
     .radio-group { display: flex; flex-direction: column; gap: 5px; }
     .radio-row { display: flex; gap: 5px; }
     .radio-option { flex: 1; transition: all 0.2s ease; }
@@ -62,12 +76,18 @@
       
       <div class="form-group">
         <label>1. ВІДСКАНУЙТЕ СВІЙ БЕЙДЖ</label>
-        <input type="text" inputmode="numeric" id="badgeInput" required placeholder="">
+        <div class="input-wrapper">
+          <input type="text" inputmode="numeric" id="badgeInput" required placeholder="">
+          <button type="button" class="clear-icon" id="clearBadgeBtn" onclick="clearBadge()">✕</button>
+        </div>
       </div>
 
       <div class="form-group">
         <label>2. ВІДСКАНУЙТЕ ШТРИХ-КОД ТЕХНІКИ</label>
-        <input type="text" id="techInput" required placeholder="">
+        <div class="input-wrapper">
+          <input type="text" id="techInput" required placeholder="">
+          <button type="button" class="clear-icon" id="clearTechBtn" onclick="clearTech()">✕</button>
+        </div>
       </div>
 
       <div class="form-group">
@@ -83,7 +103,9 @@
 
       <div class="form-group">
         <label>Коментар \ опис поломки (НЕОБОВ'ЯЗКОВО)</label>
-        <input type="text" id="commentInput" placeholder="Якщо техніка несправна...">
+        <div class="input-wrapper">
+          <input type="text" id="commentInput" placeholder="Якщо техніка несправна...">
+        </div>
       </div>
     </div>
     
@@ -108,7 +130,6 @@
   </div>
 
   <script>
-    // ВАЖЛИВО: Оновіть це посилання на свій поточний Web App URL
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxju0-GqThFLyHmf-owDt7pvDDEbBKNY5Wax0S089nQN2jWiIxmCsQe4Bs-qDjuY3Qp/exec";
 
     const form = document.getElementById('mainForm');
@@ -129,10 +150,9 @@
     let rawBadgeValue = "";
     let rawTechValue = "";
     
-    // Таймери для автоматичної перевірки
     let badgeTimer;
     let techTimer;
-    const WAIT_TIME = 600; // Чекаємо 0.6 секунди після останнього введеного символу
+    const WAIT_TIME = 600; 
 
     function updateFormHeight() {
       form.style.height = window.innerHeight + 'px';
@@ -148,12 +168,36 @@
       containerForce.style.opacity = "0.25"; containerForce.style.pointerEvents = "none";
     }
 
+    // --- НОВІ ФУНКЦІЇ ДЛЯ ОЧИЩЕННЯ ПОЛІВ ---
+    function clearBadge() {
+      clearTimeout(badgeTimer); // Зупиняємо перевірку, якщо вона почалася
+      badgeInput.value = "";
+      rawBadgeValue = "";
+      disableAllRadios(); // Блокуємо кнопки дій
+      statusMsg.style.display = "none"; // Ховаємо помилки
+      badgeInput.focus(); // Повертаємо курсор в поле
+    }
+
+    function clearTech() {
+      clearTimeout(techTimer);
+      techInput.value = "";
+      rawTechValue = "";
+      disableAllRadios();
+      statusMsg.style.display = "none";
+      techInput.focus();
+    }
+
     window.onload = function() {
       disableAllRadios();
       badgeInput.focus();
       updateFormHeight();
+      
       setInterval(() => { 
         submitBtn.disabled = (!rawBadgeValue || !rawTechValue || !document.querySelector('input[name="action"]:checked')); 
+        
+        // Автоматично показуємо/ховаємо хрестики залежно від того, чи є текст у полі
+        document.getElementById('clearBadgeBtn').style.display = badgeInput.value.length > 0 ? 'flex' : 'none';
+        document.getElementById('clearTechBtn').style.display = techInput.value.length > 0 ? 'flex' : 'none';
       }, 300);
     };
 
@@ -173,7 +217,6 @@
         });
     }
 
-    // --- ОБРОБКА БЕЙДЖА (З РОЗУМНИМ ТАЙМЕРОМ) ---
     badgeInput.addEventListener("input", function() {
       clearTimeout(badgeTimer);
       let val = badgeInput.value.trim();
@@ -187,7 +230,7 @@
     badgeInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        clearTimeout(badgeTimer); // Зупиняємо таймер, бо отримали миттєвий Enter
+        clearTimeout(badgeTimer); 
         processBadgeInput(badgeInput.value.trim());
       }
     });
@@ -197,11 +240,10 @@
         rawBadgeValue = val;
         badgeInput.value = "Завантаження...";
         prefetchWorkerName(val);
-        techInput.focus(); // Автоматично перекидаємо курсор на поле техніки!
+        techInput.focus(); 
       }
     }
 
-    // --- ОБРОБКА ТЕХНІКИ (З РОЗУМНИМ ТАЙМЕРОМ) ---
     techInput.addEventListener("input", function() {
       clearTimeout(techTimer);
       let val = techInput.value.trim();
@@ -215,7 +257,7 @@
     techInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        clearTimeout(techTimer); // Зупиняємо таймер, бо отримали миттєвий Enter
+        clearTimeout(techTimer); 
         processTechInput(techInput.value.trim());
       }
     });
@@ -224,7 +266,7 @@
       if (val !== "" && val !== rawTechValue) {
         rawTechValue = val;
         triggerStatusCheck();
-        techInput.blur(); // Програмно прибираємо курсор з поля, щоб сховати клавіатуру!
+        techInput.blur(); 
       }
     }
 
