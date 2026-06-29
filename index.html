@@ -76,7 +76,7 @@
       <div class="form-group">
         <label>1. ВІДСКАНУЙТЕ СВІЙ БЕЙДЖ</label>
         <div class="input-wrapper">
-          <input type="text" id="badgeInput" inputmode="none" required placeholder="" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+          <input type="text" id="badgeInput" required placeholder="" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onfocus="suppressKeyboard(this)">
           <button type="button" class="clear-icon" id="clearBadgeBtn" onclick="clearBadge()">✕</button>
         </div>
       </div>
@@ -84,7 +84,7 @@
       <div class="form-group">
         <label>2. ВІДСКАНУЙТЕ ШТРИХ-КОД ТЕХНІКИ</label>
         <div class="input-wrapper">
-          <input type="text" id="techInput" inputmode="none" required placeholder="">
+          <input type="text" id="techInput" required placeholder="" onfocus="suppressKeyboard(this)">
           <button type="button" class="clear-icon" id="clearTechBtn" onclick="clearTech()">✕</button>
         </div>
       </div>
@@ -152,6 +152,14 @@
     let badgeTimer;
     let techTimer;
     const WAIT_TIME = 600; 
+
+    // ИЗМЕНЕНИЕ: Функция скрытия клавиатуры без потери потока данных аппаратного сканера
+    function suppressKeyboard(element) {
+      element.blur();
+      setTimeout(() => {
+        element.focus();
+      }, 10);
+    }
 
     function updateFormHeight() {
       form.style.height = window.innerHeight + 'px';
