@@ -76,7 +76,7 @@
       <div class="form-group">
         <label>1. ВІДСКАНУЙТЕ СВІЙ БЕЙДЖ</label>
         <div class="input-wrapper">
-          <input type="text" inputmode="numeric" id="badgeInput" required placeholder="" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+          <input type="text" id="badgeInput" inputmode="none" required placeholder="" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
           <button type="button" class="clear-icon" id="clearBadgeBtn" onclick="clearBadge()">✕</button>
         </div>
       </div>
@@ -84,7 +84,7 @@
       <div class="form-group">
         <label>2. ВІДСКАНУЙТЕ ШТРИХ-КОД ТЕХНІКИ</label>
         <div class="input-wrapper">
-          <input type="text" id="techInput" required placeholder="">
+          <input type="text" id="techInput" inputmode="none" required placeholder="">
           <button type="button" class="clear-icon" id="clearTechBtn" onclick="clearTech()">✕</button>
         </div>
       </div>
@@ -233,14 +233,13 @@
     });
 
     function processBadgeInput(val) {
-      // ЗМІНА: ЖОРСТКА ПЕРЕВІРКА НА РІВНО 10 ЦИФР
       if (val.length !== 10 || !/^\d+$/.test(val)) {
         showStatus("⚠️ Бейдж має містити рівно 10 цифр!", "error");
         submitBtn.disabled = true;
         return;
       }
       
-      statusMsg.style.display = "none"; // Ховаємо стару помилку валідації, якщо все ок
+      statusMsg.style.display = "none"; 
       rawBadgeValue = val;
       badgeInput.value = "Завантаження...";
       prefetchWorkerName(val);
