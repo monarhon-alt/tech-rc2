@@ -23,10 +23,9 @@
     
     .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
     input[type="number"], input[type="text"] { width: 100%; padding: 8px; border: 1px solid #90caf9; border-radius: 6px; font-size: 14px; background-color: #f8fbff; color: #0d47a1; transition: border-color 0.2s; }
-    .input-wrapper input { padding-right: 36px; } /* Місце для хрестика */
+    .input-wrapper input { padding-right: 36px; } 
     input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #1976d2; background-color: #fff; box-shadow: 0 0 0 2px rgba(25,118,210,0.1); }
     
-    /* Стиль для нових кнопок-хрестиків */
     .clear-icon { 
       position: absolute; right: 6px; 
       width: 24px; height: 24px; 
@@ -77,7 +76,7 @@
       <div class="form-group">
         <label>1. ВІДСКАНУЙТЕ СВІЙ БЕЙДЖ</label>
         <div class="input-wrapper">
-          <input type="text" inputmode="numeric" id="badgeInput" required placeholder="">
+          <input type="text" inputmode="numeric" id="badgeInput" required placeholder="" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
           <button type="button" class="clear-icon" id="clearBadgeBtn" onclick="clearBadge()">✕</button>
         </div>
       </div>
@@ -168,14 +167,13 @@
       containerForce.style.opacity = "0.25"; containerForce.style.pointerEvents = "none";
     }
 
-    // --- НОВІ ФУНКЦІЇ ДЛЯ ОЧИЩЕННЯ ПОЛІВ ---
     function clearBadge() {
-      clearTimeout(badgeTimer); // Зупиняємо перевірку, якщо вона почалася
+      clearTimeout(badgeTimer); 
       badgeInput.value = "";
       rawBadgeValue = "";
-      disableAllRadios(); // Блокуємо кнопки дій
-      statusMsg.style.display = "none"; // Ховаємо помилки
-      badgeInput.focus(); // Повертаємо курсор в поле
+      disableAllRadios(); 
+      statusMsg.style.display = "none"; 
+      badgeInput.focus(); 
     }
 
     function clearTech() {
@@ -195,7 +193,6 @@
       setInterval(() => { 
         submitBtn.disabled = (!rawBadgeValue || !rawTechValue || !document.querySelector('input[name="action"]:checked')); 
         
-        // Автоматично показуємо/ховаємо хрестики залежно від того, чи є текст у полі
         document.getElementById('clearBadgeBtn').style.display = badgeInput.value.length > 0 ? 'flex' : 'none';
         document.getElementById('clearTechBtn').style.display = techInput.value.length > 0 ? 'flex' : 'none';
       }, 300);
@@ -236,12 +233,18 @@
     });
 
     function processBadgeInput(val) {
-      if (val !== "" && !val.includes("Завантаження") && /^\d+$/.test(val)) {
-        rawBadgeValue = val;
-        badgeInput.value = "Завантаження...";
-        prefetchWorkerName(val);
-        techInput.focus(); 
+      // ЗМІНА: ЖОРСТКА ПЕРЕВІРКА НА РІВНО 10 ЦИФР
+      if (val.length !== 10 || !/^\d+$/.test(val)) {
+        showStatus("⚠️ Бейдж має містити рівно 10 цифр!", "error");
+        submitBtn.disabled = true;
+        return;
       }
+      
+      statusMsg.style.display = "none"; // Ховаємо стару помилку валідації, якщо все ок
+      rawBadgeValue = val;
+      badgeInput.value = "Завантаження...";
+      prefetchWorkerName(val);
+      techInput.focus(); 
     }
 
     techInput.addEventListener("input", function() {
@@ -388,7 +391,6 @@
         });
     }
 
-    // --- ФУНКЦІЇ МОДАЛЬНОГО ВІКНА ---
     function openStatusModal() {
       document.getElementById('overlay').style.display = 'block';
       document.getElementById('modal').style.display = 'flex';
