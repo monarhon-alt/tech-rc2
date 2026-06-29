@@ -26,6 +26,10 @@
     .input-wrapper input { padding-right: 36px; } 
     input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #1976d2; background-color: #fff; box-shadow: 0 0 0 2px rgba(25,118,210,0.1); }
     
+    /* Стили для полей сканирования, чтобы они визуально не выглядели заблокированными */
+    input[readonly] { background-color: #f8fbff !important; cursor: default; color: #0d47a1; }
+    input[readonly]:focus { border-color: #1976d2; background-color: #fff !important; }
+
     .clear-icon { 
       position: absolute; right: 6px; 
       width: 24px; height: 24px; 
@@ -76,7 +80,7 @@
       <div class="form-group">
         <label>1. ВІДСКАНУЙТЕ СВІЙ БЕЙДЖ</label>
         <div class="input-wrapper">
-          <input type="text" id="badgeInput" required placeholder="" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onfocus="suppressKeyboard(this)">
+          <input type="text" id="badgeInput" required placeholder="Натисніть сюди та скануйте бейдж" maxlength="10" readonly>
           <button type="button" class="clear-icon" id="clearBadgeBtn" onclick="clearBadge()">✕</button>
         </div>
       </div>
@@ -84,7 +88,7 @@
       <div class="form-group">
         <label>2. ВІДСКАНУЙТЕ ШТРИХ-КОД ТЕХНІКИ</label>
         <div class="input-wrapper">
-          <input type="text" id="techInput" required placeholder="" onfocus="suppressKeyboard(this)">
+          <input type="text" id="techInput" required placeholder="Скануйте штрих-код техніки" readonly>
           <button type="button" class="clear-icon" id="clearTechBtn" onclick="clearTech()">✕</button>
         </div>
       </div>
@@ -153,13 +157,49 @@
     let techTimer;
     const WAIT_TIME = 600; 
 
-    // ИЗМЕНЕНИЕ: Функция скрытия клавиатуры без потери потока данных аппаратного сканера
-    function suppressKeyboard(element) {
-      element.blur();
-      setTimeout(() => {
-        element.focus();
-      }, 10);
-    }
+    // ИЗМЕНЕНИЕ: Глобальный перехватчик аппаратного ввода для readonly полей
+    // Сканеры ТСД эмулируют физическую клавиатуру. Мы ловим этот поток и вручную пишем в активное поле.
+    document.addEventListener('keydown', function(e) {
+      const activeEl = document.activeElement;
+      
+      if (activeEl === badgeInput || activeEl === techInput) {
+        // Если нажат Enter (сканер закончил считывание)
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (activeEl === badgeInput) {
+            clearTimeout(badgeTimer);
+            processBadgeInput(badgeInput.value.trim());
+          } else {
+            clearTimeout(techTimer);
+            processTechInput(techInput.value.trim());
+          }
+          return;
+        }
+
+        // Игнорируем управляющие клавиши (Shift, Alt, Tab и т.д.)
+        if (e.key.length > 1) return;
+
+        e.preventDefault(); // Запрещаем стандартное поведение браузера
+
+        // Для бейджа разрешаем только цифры
+        if (activeEl === badgeInput && !/[0-9]/.test(e.key)) return;
+        
+        // Ограничение длины для бейджа
+        if (activeEl === badgeInput && badgeInput.value.length >= 10) return;
+
+        // Добавляем символ в поле вручную
+        activeEl.value += e.key;
+
+        // Запуск таймера обработки (на случай если сканер не шлет Enter)
+        if (activeEl === badgeInput) {
+          clearTimeout(badgeTimer);
+          badgeTimer = setTimeout(() => processBadgeInput(badgeInput.value.trim()), WAIT_TIME);
+        } else {
+          clearTimeout(techTimer);
+          techTimer = setTimeout(() => processTechInput(techInput.value.trim()), WAIT_TIME);
+        }
+      }
+    });
 
     function updateFormHeight() {
       form.style.height = window.innerHeight + 'px';
@@ -222,24 +262,6 @@
         });
     }
 
-    badgeInput.addEventListener("input", function() {
-      clearTimeout(badgeTimer);
-      let val = badgeInput.value.trim();
-      if (val !== "" && !val.includes("Завантаження")) {
-        badgeTimer = setTimeout(() => {
-          processBadgeInput(val);
-        }, WAIT_TIME);
-      }
-    });
-
-    badgeInput.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        clearTimeout(badgeTimer); 
-        processBadgeInput(badgeInput.value.trim());
-      }
-    });
-
     function processBadgeInput(val) {
       if (val.length !== 10 || !/^\d+$/.test(val)) {
         showStatus("⚠️ Бейдж має містити рівно 10 цифр!", "error");
@@ -254,31 +276,16 @@
       techInput.focus(); 
     }
 
-    techInput.addEventListener("input", function() {
-      clearTimeout(techTimer);
-      let val = techInput.value.trim();
-      if (val !== "") {
-        techTimer = setTimeout(() => {
-          processTechInput(val);
-        }, WAIT_TIME);
-      }
-    });
-
-    techInput.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        clearTimeout(techTimer); 
-        processTechInput(techInput.value.trim());
-      }
-    });
-
     function processTechInput(val) {
       if (val !== "" && val !== rawTechValue) {
         rawTechValue = val;
         triggerStatusCheck();
-        techInput.blur(); 
       }
     }
+
+    // Позволяет делать фокус кнопкой мыши/тапом без клавиатуры
+    badgeInput.addEventListener('click', () => badgeInput.focus());
+    techInput.addEventListener('click', () => techInput.focus());
 
     function showStatus(text, type) {
       statusMsg.innerText = text;
