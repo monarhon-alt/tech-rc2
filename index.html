@@ -76,10 +76,7 @@
       <div class="form-group">
         <label>1. ВІДСКАНУЙТЕ СВІЙ БЕЙДЖ</label>
         <div class="input-wrapper">
-          <input type="text" id="badgeInput" required placeholder="" maxlength="10" 
-                 oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                 onfocus="this.setAttribute('inputmode', 'none');" 
-                 onblur="this.removeAttribute('inputmode');">
+          <input type="text" id="badgeInput" required placeholder="" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
           <button type="button" class="clear-icon" id="clearBadgeBtn" onclick="clearBadge()">✕</button>
         </div>
       </div>
@@ -87,9 +84,7 @@
       <div class="form-group">
         <label>2. ВІДСКАНУЙТЕ ШТРИХ-КОД ТЕХНІКИ</label>
         <div class="input-wrapper">
-          <input type="text" id="techInput" required placeholder=""
-                 onfocus="this.setAttribute('inputmode', 'none');" 
-                 onblur="this.removeAttribute('inputmode');">
+          <input type="text" id="techInput" required placeholder="">
           <button type="button" class="clear-icon" id="clearTechBtn" onclick="clearTech()">✕</button>
         </div>
       </div>
@@ -158,6 +153,29 @@
     let techTimer;
     const WAIT_TIME = 600; 
 
+    // --- НОВА ЛОГІКА ДЛЯ БЛОКУВАННЯ КЛАВІАТУРИ, АЛЕ НЕ СКАНЕРА ---
+    function setupScannerField(inputEl) {
+      // 1. Блокуємо спливання клавіатури від натискання пальцем
+      const preventKeyboard = function(e) {
+        e.preventDefault();
+        inputEl.focus();
+      };
+      inputEl.addEventListener('touchstart', preventKeyboard, {passive: false});
+      inputEl.addEventListener('mousedown', preventKeyboard);
+      
+      // 2. Флеш-блокування при отриманні фокусу (вбиває виклик клавіатури, але залишає поле активним)
+      inputEl.addEventListener('focus', function() {
+        inputEl.setAttribute('readonly', 'readonly');
+        setTimeout(() => {
+          inputEl.removeAttribute('readonly');
+        }, 50);
+      });
+    }
+
+    setupScannerField(badgeInput);
+    setupScannerField(techInput);
+    // -------------------------------------------------------------
+
     function updateFormHeight() {
       form.style.height = window.innerHeight + 'px';
       window.scrollTo(0, 0);
@@ -192,8 +210,12 @@
 
     window.onload = function() {
       disableAllRadios();
-      badgeInput.focus();
       updateFormHeight();
+      
+      // Мікро-затримка (0.4 сек) при старті гарантує, що сторінка повністю готова приймати код зі сканера
+      setTimeout(() => {
+        badgeInput.focus();
+      }, 400);
       
       setInterval(() => { 
         submitBtn.disabled = (!rawBadgeValue || !rawTechValue || !document.querySelector('input[name="action"]:checked')); 
@@ -273,6 +295,7 @@
       if (val !== "" && val !== rawTechValue) {
         rawTechValue = val;
         triggerStatusCheck();
+        techInput.blur(); 
       }
     }
 
