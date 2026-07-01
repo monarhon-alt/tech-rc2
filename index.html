@@ -100,6 +100,10 @@
         </div>
       </div>
 
+      <div class="form-group" id="techHolderBlock" style="display: none; text-align: center; font-weight: 700; font-size: 13px; padding: 10px; border-radius: 6px;">
+        <span id="techHolderText"></span>
+      </div>
+
       <div class="form-group">
         <label>Коментар \ опис поломки (НЕОБОВ'ЯЗКОВО)</label>
         <div class="input-wrapper">
@@ -146,6 +150,10 @@
     const containerReturn = document.getElementById('containerReturn');
     const containerForce = document.getElementById('containerForce');
 
+    // Зв'язуємо нові елементи інформера
+    const techHolderBlock = document.getElementById('techHolderBlock');
+    const techHolderText = document.getElementById('techHolderText');
+
     let rawBadgeValue = "";
     let rawTechValue = "";
     
@@ -155,7 +163,6 @@
 
     // --- НОВА ЛОГІКА ДЛЯ БЛОКУВАННЯ КЛАВІАТУРИ, АЛЕ НЕ СКАНЕРА ---
     function setupScannerField(inputEl) {
-      // 1. Блокуємо спливання клавіатури від натискання пальцем
       const preventKeyboard = function(e) {
         e.preventDefault();
         inputEl.focus();
@@ -163,7 +170,6 @@
       inputEl.addEventListener('touchstart', preventKeyboard, {passive: false});
       inputEl.addEventListener('mousedown', preventKeyboard);
       
-      // 2. Флеш-блокування при отриманні фокусу (вбиває виклик клавіатури, але залишає поле активним)
       inputEl.addEventListener('focus', function() {
         inputEl.setAttribute('readonly', 'readonly');
         setTimeout(() => {
@@ -196,6 +202,7 @@
       rawBadgeValue = "";
       disableAllRadios(); 
       statusMsg.style.display = "none"; 
+      techHolderBlock.style.display = "none"; // Ховаємо інформер
       badgeInput.focus(); 
     }
 
@@ -205,6 +212,7 @@
       rawTechValue = "";
       disableAllRadios();
       statusMsg.style.display = "none";
+      techHolderBlock.style.display = "none"; // Ховаємо інформер
       techInput.focus();
     }
 
@@ -212,7 +220,6 @@
       disableAllRadios();
       updateFormHeight();
       
-      // Мікро-затримка (0.4 сек) при старті гарантує, що сторінка повністю готова приймати код зі сканера
       setTimeout(() => {
         badgeInput.focus();
       }, 400);
@@ -365,6 +372,7 @@
       badgeInput.value = ""; techInput.value = ""; commentInput.value = "";
       rawBadgeValue = ""; rawTechValue = "";
       submitBtn.disabled = true; statusMsg.style.display = "none";
+      techHolderBlock.style.display = "none"; // Ховаємо інформер
       disableAllRadios();
       badgeInput.focus();
     }
@@ -378,6 +386,7 @@
       isChecking = true;
       showStatus("Перевірка техніки...", "loading");
       disableAllRadios();
+      techHolderBlock.style.display = "none"; // Приховуємо на час завантаження
 
       fetch(GOOGLE_SCRIPT_URL + "?action=getTechStatus&badge=" + badge + "&tech=" + tech)
         .then(res => res.json())
@@ -394,6 +403,20 @@
           if (data.techFound && data.techName) techInput.value = data.techName;
 
           if (data.techFound) {
+            // Вмикаємо і налаштовуємо новий блок статусу володіння
+            techHolderBlock.style.display = "block";
+            if (data.techHolder && data.techHolder.trim() !== "") {
+              techHolderBlock.style.backgroundColor = "#ffebee"; // Світло-червоний
+              techHolderBlock.style.color = "#c62828";
+              techHolderBlock.style.border = "1px solid #ef9a9a";
+              techHolderText.innerText = "⚠️ В РОБОТІ У: " + data.techHolder;
+            } else {
+              techHolderBlock.style.backgroundColor = "#e8f5e9"; // Світло-зелений
+              techHolderBlock.style.color = "#2e7d32";
+              techHolderBlock.style.border = "1px solid #a5d6a7";
+              techHolderText.innerText = "✅ ТЕХНІКА ВІЛЬНА";
+            }
+
             if (data.techHolder === "") {
               setRadioState('FREE');
             } else if (data.techHolder.toLowerCase() !== data.currentWorker.toLowerCase()) {
@@ -414,6 +437,7 @@
         .catch(err => {
           isChecking = false;
           statusMsg.style.display = "none";
+          techHolderBlock.style.display = "none";
         });
     }
 
